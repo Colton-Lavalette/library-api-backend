@@ -11,9 +11,10 @@ import java.util.Optional;
 
 @Repository
 public interface LoanRepository extends JpaRepository<Loan, Long> {
-    List<Loan> findByMemberId(Long memberId);
-    List<Loan> findByReturnDateIsNull();
-    List<Loan> findByReturnDateIsNotNull();
-    List<Loan> findByDueDateBefore(LocalDate date);
     Optional<Loan> findByCopyIdAndReturnDateIsNull(Long copyId);
+    boolean existsByCopyId(Long copyId);
+    boolean existsByCopyIdAndReturnDateIsNull(Long copyId);
+    boolean existsByMemberIdAndReturnDateIsNull(Long memberId);
+    List<Loan> findByMemberId(Long memberId);
+    List<Loan> findByMemberMemberCode(String memberCode);
 }

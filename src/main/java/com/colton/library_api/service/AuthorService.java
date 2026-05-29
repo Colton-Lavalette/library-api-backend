@@ -2,9 +2,13 @@ package com.colton.library_api.service;
 
 import com.colton.library_api.dto.author.AuthorRequest;
 import com.colton.library_api.dto.author.AuthorResponse;
+import com.colton.library_api.exception.ResourceNotFoundException;
 import com.colton.library_api.model.Author;
 import com.colton.library_api.model.Name;
 import com.colton.library_api.repository.AuthorRepository;
+import com.colton.library_api.specification.AuthorSpecification;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -34,71 +38,63 @@ public class AuthorService {
                 .toList();
     }
 
-    public AuthorResponse createAuthor(AuthorRequest request) {
-        if (request == null) {
+    public AuthorResponse createAuthor(AuthorRequest authorRequest) {
+        if (authorRequest == null) {
             throw new IllegalArgumentException("Request must not be null");
         }
 
         Name name = new Name(
-                request.first(),
-                request.middle(),
-                request.last()
+                authorRequest.first(),
+                authorRequest.middle(),
+                authorRequest.last()
         );
 
-        Author author = new Author(name, request.birthYear());
-        Author saved = authorRepository.save(author);
-
-        return mapToResponse(saved);
+        Author author = new Author(name, authorRequest.birthYear());
+        authorRepository.save(author);
+        return mapToResponse(author);
     }
 
     public List<AuthorResponse> searchAuthors(String first, String last, Integer birthYear) {
+        Specification<Author> spec = Specification.allOf(
+                first == null ? null : AuthorSpecification.hasFirstName(first),
+                last == null ? null : AuthorSpecification.hasLastName(last),
+                birthYear == null ? null : AuthorSpecification.hasBirthYear(birthYear)
+        );
 
-        if (first != null && last != null) {
-            return authorRepository.findByNameFirstAndNameLast(first, last)
-                    .stream().map(this::mapToResponse).toList();
-        }
-
-        if (first != null) {
-            return authorRepository.findByNameFirst(first)
-                    .stream().map(this::mapToResponse).toList();
-        }
-
-        if (last != null) {
-            return authorRepository.findByNameLast(last)
-                    .stream().map(this::mapToResponse).toList();
-        }
-
-        if (birthYear != null) {
-            return authorRepository.findByBirthYear(birthYear)
-                    .stream().map(this::mapToResponse).toList();
-        }
-
-        return findAll();
-    }
-
-    public AuthorResponse updateAuthor(Long id, AuthorRequest request) {
-        Author author = findByIdEntity(id);
-
-        if (request.first() != null || request.last() != null || request.middle() != null) {
-            Name current = author.getName();
-            Name updatedName = new Name(
-                    request.first() != null ? request.first() : current.getFirst(),
-                    request.middle() != null ? request.middle() : current.getMiddle(),
-                    request.last() != null ? request.last() : current.getLast()
-            );
-            author.updateName(updatedName);
-        }
-
-        if (request.birthYear() != null) {
-            author.updateBirthYear(request.birthYear());
-        }
-
-        return mapToResponse(authorRepository.save(author));
+        return authorRepository.findAll(spec)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
     private Author findByIdEntity(Long id) {
         return authorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Author not found with id: " + id));
+    }
+
+    public AuthorResponse findById(Long id) {
+        return mapToResponse(findByIdEntity(id));
+    }
+
+    @Transactional
+    public AuthorResponse updateAuthor(Long id, AuthorRequest authorRequest) {
+        Author author = findByIdEntity(id);
+
+        if (authorRequest.first() != null || authorRequest.last() != null || authorRequest.middle() != null) {
+            Name current = author.getName();
+            Name updatedName = new Name(
+                    authorRequest.first() != null ? authorRequest.first() : current.getFirst(),
+                    authorRequest.middle() != null ? authorRequest.middle() : current.getMiddle(),
+                    authorRequest.last() != null ? authorRequest.last() : current.getLast()
+            );
+            author.updateName(updatedName);
+        }
+
+        if (authorRequest.birthYear() != null) {
+            author.updateBirthYear(authorRequest.birthYear());
+        }
+
+        return mapToResponse(author);
     }
 
     public void deleteAuthor(Long id) {

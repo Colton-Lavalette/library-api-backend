@@ -1,4 +1,7 @@
 package com.colton.library_api.dto.book;
 
-public class BookRequest {
-}
+public record BookRequest(
+    String title,
+    String isbn,
+    Integer publishedYear
+) {}

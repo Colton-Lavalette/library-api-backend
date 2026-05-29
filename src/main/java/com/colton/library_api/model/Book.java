@@ -1,6 +1,5 @@
 package com.colton.library_api.model;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,6 +9,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Entity
@@ -23,18 +23,18 @@ public class Book {
     @Column(nullable = false)
     private String title;
 
-    @Column(length = 13, unique = true, nullable = false, updatable = false)
+    @Column(length = 13, unique = true, nullable = false)
     private String isbn;
 
     private Integer publishedYear;
 
-    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "book")
     private final List<BookAuthor> authors = new ArrayList<>();
 
-    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "book")
     private final List<BookGenre> genres = new ArrayList<>();
 
-    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "book")
     private final List<BookCopy> copies = new ArrayList<>();
 
     public Book() {}
@@ -49,6 +49,7 @@ public class Book {
         this.title = title;
         this.isbn = isbn;
         this.publishedYear = publishedYear;
+
     }
 
     public Long getId() {
@@ -68,15 +69,15 @@ public class Book {
     }
 
     public List<BookAuthor> getAuthors() {
-        return authors;
+        return Collections.unmodifiableList(authors);
     }
 
     public List<BookGenre> getGenres() {
-        return genres;
+        return Collections.unmodifiableList(genres);
     }
 
     public List<BookCopy> getCopies() {
-        return copies;
+        return Collections.unmodifiableList(copies);
     }
 
     public void updateTitle(String title) {
@@ -84,6 +85,13 @@ public class Book {
             throw new IllegalArgumentException("Title cannot be blank");
         }
         this.title = title;
+    }
+
+    public void updateIsbn(String isbn) {
+        if (isbn == null || isbn.isBlank()) {
+            throw new IllegalArgumentException("ISBN cannot be blank");
+        }
+        this.isbn = isbn;
     }
 
     public void updatePublishedYear(Integer publishedYear) {
@@ -100,9 +108,13 @@ public class Book {
         genres.add(link);
     }
 
-    public BookCopy addCopy() {
-        BookCopy copy = new BookCopy(this);
+    public BookCopy addCopy(String copyCode) {
+        if (copyCode == null || copyCode.isBlank()) {
+            throw new IllegalArgumentException("Copy code cannot be blank");
+        }
+        BookCopy copy = new BookCopy(this, copyCode);
         copies.add(copy);
         return copy;
     }
+
 }

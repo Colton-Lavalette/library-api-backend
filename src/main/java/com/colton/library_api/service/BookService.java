@@ -1,62 +1,100 @@
 package com.colton.library_api.service;
 
+import com.colton.library_api.dto.book.BookRequest;
+import com.colton.library_api.dto.book.BookResponse;
+import com.colton.library_api.dto.bookcopy.BookCopyResponse;
+import com.colton.library_api.exception.DuplicateCopyCodeException;
+import com.colton.library_api.exception.DuplicateIsbnException;
+import com.colton.library_api.exception.ResourceNotFoundException;
 import com.colton.library_api.model.Book;
+import com.colton.library_api.model.BookCopy;
+import com.colton.library_api.repository.BookCopyRepository;
 import com.colton.library_api.repository.BookRepository;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class BookService {
     private final BookRepository bookRepository;
+    private final BookCopyRepository bookCopyRepository;
 
-    public BookService(BookRepository bookRepository) {
+    public BookService(BookRepository bookRepository,
+                       BookCopyRepository bookCopyRepository) {
         this.bookRepository = bookRepository;
+        this.bookCopyRepository = bookCopyRepository;
     }
 
-    public Book createBook(String title, String isbn, Integer publishedYear) {
-        if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("Title must not be empty");
-        }
-        if (isbn == null || isbn.isBlank()) {
-            throw new IllegalArgumentException("ISBN must not be empty");
-        }
-        if (bookRepository.findByIsbn(isbn).isPresent()) {
-            throw new DuplicateResourceException("Book already exists with isbn: " + isbn);
-        }
-        return bookRepository.save(new Book(title, isbn, publishedYear));
+    private BookResponse mapToResponse(Book book) {
+        return new BookResponse(
+                book.getId(),
+                book.getTitle(),
+                book.getIsbn(),
+                book.getPublishedYear()
+        );
     }
 
-    public Book findById(Long id) {
+    public List<BookResponse> findAll() {
+        return bookRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    public BookResponse createBook(BookRequest bookRequest) {
+        if (bookRequest == null) {
+            throw new IllegalArgumentException("Request must not be null");
+        }
+
+        if (bookRepository.existsByIsbn(bookRequest.isbn())) {
+            throw new DuplicateIsbnException(bookRequest.isbn());
+        }
+
+        Book book = new Book(
+                bookRequest.title(),
+                bookRequest.isbn(),
+                bookRequest.publishedYear()
+        );
+
+        Book saved = bookRepository.save(book);
+
+        return mapToResponse(saved);
+    }
+
+    private Book findByEntityId(Long id) {
         return bookRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Book not found with id: " + id));
     }
 
-    public Book findByIsbn(String isbn) {
-        return bookRepository.findByIsbn(isbn)
-                .orElseThrow(() -> new ResourceNotFoundException("Book not found with isbn: " + isbn));
+    public BookResponse findById(Long id) {
+        return mapToResponse(findByEntityId(id));
     }
 
-    public List<Book> findAll() {
-        return bookRepository.findAll();
-    }
-
-    public List<Book> findByPublishedYear(Integer publishedYear) {
-        return bookRepository.findByPublishedYear(publishedYear);
-    }
-
-    public Book updateBook(Long id, String title, Integer publishedYear) {
-        Book book = findById(id);
-        if (title != null && !title.isBlank()) book.updateTitle(title);
-        if (publishedYear != null) book.updatePublishedYear(publishedYear);
-        return bookRepository.save(book);
-    }
-
-    public void deleteBook(Long id) {
-        if (!bookRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Book not found with id: " + id);
+    @Transactional
+    public BookResponse updateBook(Long id, BookRequest bookRequest) {
+        if (bookRequest == null) {
+            throw new IllegalArgumentException("Request must not be null");
         }
-        bookRepository.deleteById(id);
+
+        Book book = findByEntityId(id);
+
+        if (bookRequest.title() != null) {
+            book.updateTitle(bookRequest.title());
+        }
+
+        if (bookRequest.isbn() != null && !bookRequest.isbn().equals(book.getIsbn())) {
+            if (bookRepository.existsByIsbn(bookRequest.isbn())) {
+                throw new DuplicateIsbnException(bookRequest.isbn());
+            }
+            book.updateIsbn(bookRequest.isbn());
+        }
+
+        if (bookRequest.publishedYear() != null) {
+            book.updatePublishedYear(bookRequest.publishedYear());
+        }
+
+        return mapToResponse(bookRepository.save(book));
     }
+
 }

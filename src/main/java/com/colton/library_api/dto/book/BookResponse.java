@@ -1,4 +1,8 @@
 package com.colton.library_api.dto.book;
 
-public class BookResponse {
-}
+public record BookResponse(
+    Long id,
+    String title,
+    String isbn,
+    Integer publishedYear
+) {}
