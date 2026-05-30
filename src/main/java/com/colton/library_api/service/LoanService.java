@@ -1,5 +1,6 @@
 package com.colton.library_api.service;
 
+import com.colton.library_api.dto.bookcopy.BookCopyResponse;
 import com.colton.library_api.dto.loan.LoanRequest;
 import com.colton.library_api.dto.loan.LoanResponse;
 import com.colton.library_api.exception.BookAlreadyLoanedException;
@@ -53,6 +54,15 @@ public class LoanService {
         return bookCopyRepository.findByCopyCode(copyCode)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Copy not found with code: " + copyCode));
+    }
+
+    private Loan findByIdEntity(Long id) {
+        return loanRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Loan not found"));
+    }
+
+    public LoanResponse findById(Long id) {
+        return mapToResponse(findByIdEntity(id));
     }
 
     private LocalDate generateLoanDate() {

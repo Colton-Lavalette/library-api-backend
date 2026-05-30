@@ -77,19 +77,19 @@ public class MemberService {
         return memberCode;
     }
 
-    private Member findMemberEntityByCode(String memberCode) {
+    private Member findByCodeEntity(String memberCode) {
         return memberRepository.findByMemberCode(memberCode)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Member not found with code: " + memberCode));
     }
 
-    public MemberResponse findByMemberCode(String memberCode) {
-        return mapToResponse(findMemberEntityByCode(memberCode));
+    public MemberResponse findByCode(String memberCode) {
+        return mapToResponse(findByCodeEntity(memberCode));
     }
 
     @Transactional
     public MemberResponse updateMember(String memberCode, MemberRequest memberRequest) {
-        Member member = findMemberEntityByCode(memberCode);
+        Member member = findByCodeEntity(memberCode);
 
         if (memberRequest.first() != null || memberRequest.last() != null || memberRequest.middle() != null) {
             Name current = member.getName();
@@ -114,7 +114,7 @@ public class MemberService {
     }
 
     public MemberResponse deactivateMember(String memberCode) {
-        Member member = findMemberEntityByCode(memberCode);
+        Member member = findByCodeEntity(memberCode);
         if (!member.isActive()) {
             return mapToResponse(member);
         }
@@ -126,7 +126,7 @@ public class MemberService {
     }
 
     public MemberResponse activateMember(String memberCode) {
-        Member member = findMemberEntityByCode(memberCode);
+        Member member = findByCodeEntity(memberCode);
 
         if (member.isActive()) {
             return mapToResponse(member);

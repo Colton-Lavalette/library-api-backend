@@ -1,5 +1,6 @@
 package com.colton.library_api.service;
 
+import com.colton.library_api.dto.genre.GenreRequest;
 import com.colton.library_api.dto.genre.GenreResponse;
 import com.colton.library_api.exception.ResourceNotFoundException;
 import com.colton.library_api.model.Genre;
@@ -24,7 +25,10 @@ public class GenreService {
         );
     }
 
-    public GenreResponse createGenre(String name) {
+    public GenreResponse createGenre(GenreRequest genreRequest) {
+
+        String name = genreRequest.name();
+
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Name must not be null");
         }
