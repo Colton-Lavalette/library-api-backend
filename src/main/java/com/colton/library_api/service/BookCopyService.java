@@ -3,7 +3,6 @@ package com.colton.library_api.service;
 import com.colton.library_api.dto.bookcopy.BookCopyRequest;
 import com.colton.library_api.dto.bookcopy.BookCopyResponse;
 import com.colton.library_api.exception.CopyHasLoanHistoryException;
-import com.colton.library_api.exception.DuplicateCopyCodeException;
 import com.colton.library_api.exception.ResourceNotFoundException;
 import com.colton.library_api.model.Book;
 import com.colton.library_api.model.BookCopy;
@@ -28,14 +27,36 @@ public class BookCopyService {
         this.bookRepository = bookRepository;
     }
 
-    public BookCopy findById(Long id) {
+    private BookCopyResponse mapToResponse(BookCopy copy) {
+        return new BookCopyResponse(
+                copy.getId(),
+                copy.getCopyCode(),
+                copy.getBook().getId(),
+                copy.isExtant()
+        );
+    }
+
+    private BookCopy findByIdEntity(Long id) {
         return bookCopyRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Book Copy not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Book copy not found"));
+    }
+
+    public BookCopyResponse findById(Long id) {
+        return mapToResponse(findByIdEntity(id));
+    }
+
+    private BookCopy findByCodeEntity(String copyCode) {
+        return bookCopyRepository.findByCopyCode(copyCode)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Book copy not found with code: " + copyCode));
+    }
+
+    public BookCopyResponse findByCode(String copyCode) {
+        return mapToResponse(findByCodeEntity(copyCode));
     }
 
     public void deleteCopy(Long copyId) {
-        BookCopy copy = bookCopyRepository.findById(copyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Book copy not found with id: " + copyId));
+        BookCopy copy = findByIdEntity(copyId);
 
         if (loanRepository.existsByCopyId(copyId)) {
             throw new CopyHasLoanHistoryException("Cannot delete copy with loan history");
@@ -52,28 +73,19 @@ public class BookCopyService {
         }
 
         Book book = bookRepository.findById(request.bookId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Book not found with id: " + request.bookId()
-                ));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Book not found with id: " + request.bookId()
+                        )
+                );
 
-        String copyCode = request.copyCode();
-
-        if (copyCode == null || copyCode.isBlank()) {
-            copyCode = generateUniqueCopyCode();
-        } else if (bookCopyRepository.existsByCopyCode(copyCode)) {
-            throw new DuplicateCopyCodeException("Copy code already exists: " + copyCode);
-        }
+        String copyCode = generateUniqueCopyCode();
 
         BookCopy copy = new BookCopy(book, copyCode);
 
         BookCopy saved = bookCopyRepository.save(copy);
 
-        return new BookCopyResponse(
-                saved.getId(),
-                saved.getCopyCode(),
-                book.getId(),
-                saved.isExtant()
-        );
+        return mapToResponse(saved);
     }
 
     private String generateUniqueCopyCode() {
