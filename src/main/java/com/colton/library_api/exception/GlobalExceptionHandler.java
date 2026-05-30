@@ -35,7 +35,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
             EmailAlreadyInUseException.class,
             DuplicateIsbnException.class,
-            DuplicateCopyCodeException.class,
             BookAlreadyLoanedException.class,
             AuthorAlreadyLinkedException.class,
             GenreAlreadyLinkedException.class
