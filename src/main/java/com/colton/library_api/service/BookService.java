@@ -94,7 +94,7 @@ public class BookService {
             book.updatePublishedYear(bookRequest.publishedYear());
         }
 
-        return mapToResponse(bookRepository.save(book));
+        return mapToResponse(book);
     }
 
 }

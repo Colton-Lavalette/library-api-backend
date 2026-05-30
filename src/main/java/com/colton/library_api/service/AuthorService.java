@@ -55,11 +55,11 @@ public class AuthorService {
     }
 
     public List<AuthorResponse> searchAuthors(String first, String last, Integer birthYear) {
-        Specification<Author> spec = Specification.allOf(
-                first == null ? null : AuthorSpecification.hasFirstName(first),
-                last == null ? null : AuthorSpecification.hasLastName(last),
-                birthYear == null ? null : AuthorSpecification.hasBirthYear(birthYear)
-        );
+        Specification<Author> spec = (root, query, cb) -> cb.conjunction();
+
+        if (first != null) spec = spec.and(AuthorSpecification.hasFirstName(first));
+        if (last != null) spec = spec.and(AuthorSpecification.hasLastName(last));
+        if (birthYear != null) spec = spec.and(AuthorSpecification.hasBirthYear(birthYear));
 
         return authorRepository.findAll(spec)
                 .stream()

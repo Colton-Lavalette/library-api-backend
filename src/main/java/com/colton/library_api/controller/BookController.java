@@ -1,12 +1,14 @@
 package com.colton.library_api.controller;
 
+import com.colton.library_api.dto.book.BookRequest;
 import com.colton.library_api.dto.book.BookResponse;
 import com.colton.library_api.dto.common.ApiResponse;
+import com.colton.library_api.dto.common.ApiResponseFactory;
 import com.colton.library_api.service.BookService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.Instant;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/books")
@@ -23,14 +25,33 @@ public class BookController {
 
         BookResponse book = bookService.findById(id);
 
-        ApiResponse<BookResponse> response = new ApiResponse<>(
-                200,
-                "OK",
-                book,
-                "/books/" + id,
-                Instant.now().toString()
+        return ResponseEntity.ok(
+                ApiResponseFactory.success(
+                        HttpStatus.OK,
+                        "Book retrieved successfully",
+                        book,
+                        "/books/" + id
+                )
         );
+    }
 
-        return ResponseEntity.ok(response);
+    @PostMapping
+    public ResponseEntity<ApiResponse<BookResponse>> createBook(
+            @Valid @RequestBody BookRequest request
+    ) {
+
+        BookResponse book = bookService.createBook(request);
+
+        ApiResponse<BookResponse> response =
+                ApiResponseFactory.success(
+                        HttpStatus.CREATED,
+                        "Book created successfully",
+                        book,
+                        "/books/" + book.id()
+                );
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
     }
 }
