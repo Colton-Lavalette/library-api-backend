@@ -1,6 +1,5 @@
 package com.colton.library_api.service;
 
-import com.colton.library_api.exception.GenreAlreadyLinkedException;
 import com.colton.library_api.exception.ResourceNotFoundException;
 import com.colton.library_api.model.Book;
 import com.colton.library_api.model.BookGenre;
@@ -35,18 +34,20 @@ public class BookGenreService {
         Genre genre = genreRepository.findById(genreId)
                 .orElseThrow(() -> new ResourceNotFoundException("Genre not found with id: " + genreId));
 
-        boolean exists = bookGenreRepository
-                .existsByBookAndGenre(book, genre);
+        BookGenre link = bookGenreRepository
+                .findByBookIdAndGenreId(bookId, genreId)
+                .orElse(null);
 
-        if (exists) {
-            throw new GenreAlreadyLinkedException(bookId, genreId);
+        if (primary) {
+            bookGenreRepository.clearPrimaryForBook(bookId);
         }
 
-        if (primary && bookGenreRepository.existsByBookAndPrimaryGenreTrue(book)) {
-            throw new IllegalStateException("Book already has a primary genre");
+        if (link == null) {
+            link = new BookGenre(book, genre, primary);
+        } else {
+            link.setPrimaryGenre(primary);
         }
 
-        BookGenre link = new BookGenre(book, genre, primary);
         bookGenreRepository.save(link);
     }
 

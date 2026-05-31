@@ -1,11 +1,17 @@
 package com.colton.library_api.service;
 
+import com.colton.library_api.dto.author.AuthorResponse;
+import com.colton.library_api.dto.book.BookAuthorResponse;
+import com.colton.library_api.dto.book.BookGenreResponse;
 import com.colton.library_api.dto.book.BookRequest;
 import com.colton.library_api.dto.book.BookResponse;
+import com.colton.library_api.dto.genre.GenreResponse;
 import com.colton.library_api.exception.DuplicateIsbnException;
 import com.colton.library_api.exception.ResourceNotFoundException;
-import com.colton.library_api.model.Book;
+import com.colton.library_api.model.*;
+import com.colton.library_api.repository.BookAuthorRepository;
 import com.colton.library_api.repository.BookCopyRepository;
+import com.colton.library_api.repository.BookGenreRepository;
 import com.colton.library_api.repository.BookRepository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
@@ -14,12 +20,18 @@ import java.util.List;
 
 @Service
 public class BookService {
+    private final BookAuthorRepository bookAuthorRepository;
     private final BookRepository bookRepository;
     private final BookCopyRepository bookCopyRepository;
+    private final BookGenreRepository bookGenreRepository;
 
-    public BookService(BookRepository bookRepository,
-                       BookCopyRepository bookCopyRepository) {
+    public BookService(BookAuthorRepository bookAuthorRepository,
+                       BookRepository bookRepository,
+                       BookCopyRepository bookCopyRepository,
+                       BookGenreRepository bookGenreRepository) {
+        this.bookAuthorRepository = bookAuthorRepository;
         this.bookRepository = bookRepository;
+        this.bookGenreRepository = bookGenreRepository;
         this.bookCopyRepository = bookCopyRepository;
     }
 
@@ -32,10 +44,58 @@ public class BookService {
         );
     }
 
+    private AuthorResponse mapToAuthorResponse(Author author) {
+        return new AuthorResponse(
+                author.getId(),
+                author.getName().getFirst(),
+                author.getName().getMiddle(),
+                author.getName().getLast(),
+                author.getBirthYear()
+        );
+    }
+
+    private GenreResponse mapToGenreResponse(Genre genre) {
+        return new GenreResponse(
+                genre.getId(),
+                genre.getName()
+        );
+    }
+
     public List<BookResponse> findAll() {
         return bookRepository.findAll()
                 .stream()
                 .map(this::mapToResponse)
+                .toList();
+    }
+
+    private Book findByEntityId(Long id) {
+        return bookRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found with id: " + id));
+    }
+
+    public BookResponse findById(Long id) {
+        return mapToResponse(findByEntityId(id));
+    }
+
+    public List<BookAuthorResponse> getAuthorsForBook(Long bookId) {
+        Book book = findByEntityId(bookId);
+
+        return book.getAuthors().stream()
+                .map(ba -> new BookAuthorResponse(
+                        mapToAuthorResponse(ba.getAuthor()),
+                        ba.isPrimaryAuthor()
+                ))
+                .toList();
+    }
+
+    public List<BookGenreResponse> getGenresForBook(Long bookId) {
+        Book book = findByEntityId(bookId);
+
+        return book.getGenres().stream()
+                .map(bg -> new BookGenreResponse(
+                        mapToGenreResponse(bg.getGenre()),
+                        bg.isPrimaryGenre()
+                ))
                 .toList();
     }
 
@@ -57,15 +117,6 @@ public class BookService {
         Book saved = bookRepository.save(book);
 
         return mapToResponse(saved);
-    }
-
-    private Book findByEntityId(Long id) {
-        return bookRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Book not found with id: " + id));
-    }
-
-    public BookResponse findById(Long id) {
-        return mapToResponse(findByEntityId(id));
     }
 
     @Transactional

@@ -1,6 +1,5 @@
 package com.colton.library_api.service;
 
-import com.colton.library_api.exception.AuthorAlreadyLinkedException;
 import com.colton.library_api.exception.ResourceNotFoundException;
 import com.colton.library_api.model.Author;
 import com.colton.library_api.model.Book;
@@ -35,18 +34,20 @@ public class BookAuthorService {
         Author author = authorRepository.findById(authorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Author not found with id: " + authorId));
 
-        boolean exists = bookAuthorRepository
-                .existsByBookIdAndAuthorId(bookId, authorId);
+        BookAuthor link = bookAuthorRepository
+                .findByBookIdAndAuthorId(bookId, authorId)
+                .orElse(null);
 
-        if (exists) {
-            throw new AuthorAlreadyLinkedException(bookId, authorId);
+        if (primary) {
+            bookAuthorRepository.clearPrimaryForBook(bookId);
         }
 
-        if (primary && bookAuthorRepository.existsByBookIdAndPrimaryAuthorTrue(bookId)) {
-            throw new IllegalStateException("Book already has a primary author");
+        if (link == null) {
+            link = new BookAuthor(book, author, primary);
+        } else {
+            link.setPrimaryAuthor(primary);
         }
 
-        BookAuthor link = new BookAuthor(book, author, primary);
         bookAuthorRepository.save(link);
     }
 
