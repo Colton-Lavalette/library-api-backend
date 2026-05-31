@@ -35,9 +35,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
             EmailAlreadyInUseException.class,
             DuplicateIsbnException.class,
-            BookAlreadyLoanedException.class,
-            AuthorAlreadyLinkedException.class,
-            GenreAlreadyLinkedException.class
+            BookAlreadyLoanedException.class
     })
     public ResponseEntity<ApiError> conflict(RuntimeException ex, HttpServletRequest request) {
         return buildError(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
