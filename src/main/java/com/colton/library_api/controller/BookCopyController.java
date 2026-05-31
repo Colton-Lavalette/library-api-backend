@@ -1,14 +1,9 @@
 package com.colton.library_api.controller;
 
-import com.colton.library_api.dto.bookcopy.BookCopyRequest;
 import com.colton.library_api.dto.bookcopy.BookCopyResponse;
 import com.colton.library_api.dto.common.ApiResponse;
-import com.colton.library_api.dto.common.ApiResponseFactory;
-import com.colton.library_api.dto.genre.GenreResponse;
 import com.colton.library_api.service.BookCopyService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -66,12 +61,12 @@ public class BookCopyController extends BaseController {
         );
     }
 
-    @PostMapping("/book-copies")
+    @PostMapping("/books/{bookId}/copies")
     public ResponseEntity<ApiResponse<BookCopyResponse>> createBookCopy(
-            @Valid @RequestBody BookCopyRequest request
+            @PathVariable Long bookId
     ) {
-
-        BookCopyResponse bookCopy = bookCopyService.createBookCopy(request);
+        BookCopyResponse bookCopy =
+                bookCopyService.createBookCopy(bookId);
 
         return created(
                 bookCopy,

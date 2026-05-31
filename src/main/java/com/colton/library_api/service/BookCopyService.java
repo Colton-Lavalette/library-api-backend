@@ -1,8 +1,6 @@
 package com.colton.library_api.service;
 
-import com.colton.library_api.dto.bookcopy.BookCopyRequest;
 import com.colton.library_api.dto.bookcopy.BookCopyResponse;
-import com.colton.library_api.dto.genre.GenreResponse;
 import com.colton.library_api.exception.CopyHasLoanHistoryException;
 import com.colton.library_api.exception.ResourceNotFoundException;
 import com.colton.library_api.model.Book;
@@ -11,7 +9,6 @@ import com.colton.library_api.repository.BookCopyRepository;
 import com.colton.library_api.repository.BookRepository;
 import com.colton.library_api.repository.LoanRepository;
 import com.colton.library_api.util.CodeGenerator;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -77,16 +74,12 @@ public class BookCopyService {
     }
 
     @Transactional
-    public BookCopyResponse createBookCopy(BookCopyRequest request) {
+    public BookCopyResponse createBookCopy(Long bookId) {
 
-        if (request == null || request.bookId() == null) {
-            throw new IllegalArgumentException("BookId must not be null");
-        }
-
-        Book book = bookRepository.findById(request.bookId())
+        Book book = bookRepository.findById(bookId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "Book not found with id: " + request.bookId()
+                                "Book not found with id: " + bookId
                         )
                 );
 
