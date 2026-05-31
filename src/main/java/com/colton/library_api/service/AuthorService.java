@@ -2,10 +2,12 @@ package com.colton.library_api.service;
 
 import com.colton.library_api.dto.author.AuthorRequest;
 import com.colton.library_api.dto.author.AuthorResponse;
+import com.colton.library_api.exception.ResourceInUseException;
 import com.colton.library_api.exception.ResourceNotFoundException;
 import com.colton.library_api.model.Author;
 import com.colton.library_api.model.Name;
 import com.colton.library_api.repository.AuthorRepository;
+import com.colton.library_api.repository.BookAuthorRepository;
 import com.colton.library_api.specification.AuthorSpecification;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.domain.Specification;
@@ -16,9 +18,11 @@ import java.util.List;
 @Service
 public class AuthorService {
     private final AuthorRepository authorRepository;
+    private final BookAuthorRepository bookAuthorRepository;
 
-    public AuthorService(AuthorRepository authorRepository) {
+    public AuthorService(AuthorRepository authorRepository, BookAuthorRepository bookAuthorRepository) {
         this.authorRepository = authorRepository;
+        this.bookAuthorRepository = bookAuthorRepository;
     }
 
     private AuthorResponse mapToResponse(Author author) {
@@ -99,6 +103,12 @@ public class AuthorService {
 
     public void deleteAuthor(Long id) {
         Author author = findByIdEntity(id);
+        boolean inUse = bookAuthorRepository.existsByAuthorId(id);
+
+        if (inUse) {
+            throw new ResourceInUseException("Author is linked to one or more books and cannot be deleted");
+        }
+
         authorRepository.delete(author);
     }
 }

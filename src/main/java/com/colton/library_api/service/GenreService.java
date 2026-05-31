@@ -2,20 +2,24 @@ package com.colton.library_api.service;
 
 import com.colton.library_api.dto.genre.GenreRequest;
 import com.colton.library_api.dto.genre.GenreResponse;
+import com.colton.library_api.exception.ResourceInUseException;
 import com.colton.library_api.exception.ResourceNotFoundException;
 import com.colton.library_api.model.Genre;
+import com.colton.library_api.repository.BookGenreRepository;
 import com.colton.library_api.repository.GenreRepository;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 public class GenreService {
     private final GenreRepository genreRepository;
+    private final BookGenreRepository bookGenreRepository;
 
-    public GenreService(GenreRepository genreRepository) {
+    public GenreService(GenreRepository genreRepository, BookGenreRepository bookGenreRepository) {
         this.genreRepository = genreRepository;
+        this.bookGenreRepository = bookGenreRepository;
     }
 
     private GenreResponse mapToResponse(Genre genre) {
@@ -38,10 +42,12 @@ public class GenreService {
     }
 
     public GenreResponse findById(Long id) {
-        Genre genre = genreRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Genre not found with id: " + id));
+        return mapToResponse(findByIdEntity(id));
+    }
 
-        return mapToResponse(genre);
+    private Genre findByIdEntity(Long id) {
+        return genreRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Genre not found with id: " + id));
     }
 
     public List<GenreResponse> findAll() {
@@ -63,5 +69,17 @@ public class GenreService {
                 .orElseThrow(() -> new ResourceNotFoundException("Genre not found with id: " + id));
         genre.updateName(name);
         return mapToResponse(genre);
+    }
+
+    public void deleteGenre(Long id) {
+        Genre genre = findByIdEntity(id);
+
+        boolean inUse = bookGenreRepository.existsByGenreId(id);
+
+        if (inUse) {
+            throw new ResourceInUseException("Genre is linked to one or books and cannot be deleted");
+        }
+
+        genreRepository.delete(genre);
     }
 }

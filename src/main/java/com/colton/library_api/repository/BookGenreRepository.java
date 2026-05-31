@@ -12,5 +12,6 @@ import java.util.Optional;
 public interface BookGenreRepository extends JpaRepository<BookGenre, Long> {
     boolean existsByBookAndGenre(Book book, Genre genre);
     boolean existsByBookAndPrimaryGenreTrue(Book book);
+    boolean existsByGenreId(Long genreId);
     Optional<BookGenre> findByBookAndGenre(Book book, Genre genre);
 }

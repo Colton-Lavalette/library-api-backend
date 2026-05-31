@@ -2,12 +2,9 @@ package com.colton.library_api.service;
 
 import com.colton.library_api.dto.book.BookRequest;
 import com.colton.library_api.dto.book.BookResponse;
-import com.colton.library_api.dto.bookcopy.BookCopyResponse;
-import com.colton.library_api.exception.DuplicateCopyCodeException;
 import com.colton.library_api.exception.DuplicateIsbnException;
 import com.colton.library_api.exception.ResourceNotFoundException;
 import com.colton.library_api.model.Book;
-import com.colton.library_api.model.BookCopy;
 import com.colton.library_api.repository.BookCopyRepository;
 import com.colton.library_api.repository.BookRepository;
 import org.springframework.transaction.annotation.Transactional;
