@@ -5,32 +5,47 @@ import com.colton.library_api.dto.common.ApiResponseFactory;
 import com.colton.library_api.dto.genre.GenreRequest;
 import com.colton.library_api.dto.genre.GenreResponse;
 import com.colton.library_api.service.GenreService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/genres")
-public class GenreController {
+public class GenreController extends BaseController{
     private final GenreService genreService;
 
     public GenreController(GenreService genreService) {
         this.genreService = genreService;
     }
 
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<GenreResponse>>> getAllGenres(HttpServletRequest httpServletRequest) {
+
+        List<GenreResponse> genres = genreService.findAll();
+
+        return ok(
+                "Genres retrieved successfully",
+                genres,
+                httpServletRequest
+        );
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<GenreResponse>> getGenre(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<GenreResponse>> getGenre(
+            @PathVariable Long id,
+            HttpServletRequest httpServletRequest
+    ) {
 
         GenreResponse genre = genreService.findById(id);
 
-        return ResponseEntity.ok(
-                ApiResponseFactory.success(
-                        HttpStatus.OK,
-                        "Genre retrieved successfully",
-                        genre,
-                        "/genres/" + id
-                )
+        return ok(
+                "Genre retrieved successfully",
+                genre,
+                httpServletRequest
         );
     }
 
@@ -41,17 +56,9 @@ public class GenreController {
 
         GenreResponse genre = genreService.createGenre(request);
 
-        ApiResponse<GenreResponse> response =
-                ApiResponseFactory.success(
-                        HttpStatus.CREATED,
-                        "Genre created successfully",
-                        genre,
-                        "/genres/" + genre.id()
-                );
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(response);
+        return created(
+                genre,
+                "/genres/" + genre.id()
+        );
     }
-
 }

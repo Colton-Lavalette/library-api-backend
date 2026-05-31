@@ -1,6 +1,5 @@
 package com.colton.library_api.service;
 
-import com.colton.library_api.dto.bookcopy.BookCopyResponse;
 import com.colton.library_api.dto.loan.LoanRequest;
 import com.colton.library_api.dto.loan.LoanResponse;
 import com.colton.library_api.exception.BookAlreadyLoanedException;
@@ -13,9 +12,11 @@ import com.colton.library_api.model.Member;
 import com.colton.library_api.repository.BookCopyRepository;
 import com.colton.library_api.repository.LoanRepository;
 import com.colton.library_api.repository.MemberRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 public class LoanService {
@@ -42,6 +43,13 @@ public class LoanService {
             loan.getDueDate(),
             loan.getReturnDate()
         );
+    }
+
+    public List<LoanResponse> findAll() {
+        return loanRepository.findAll(Sort.by(Sort.Direction.DESC, "loanDate"))
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
     private Member findMemberByCode(String memberCode) {
@@ -73,6 +81,11 @@ public class LoanService {
         return loanDate.plusWeeks(3);
     }
 
+    private Loan getActiveLoan(BookCopy copy) {
+        return loanRepository.findByCopyIdAndReturnDateIsNull(copy.getId())
+                .orElseThrow(() -> new NoActiveLoanException("No active loan"));
+    }
+
     public LoanResponse createLoan(LoanRequest loanRequest) {
         if (loanRequest == null) {
             throw new IllegalArgumentException("Request must not be null");
@@ -95,11 +108,6 @@ public class LoanService {
         Loan loan = new Loan(member, copy, loanDate, dueDate);
         loanRepository.save(loan);
         return mapToResponse(loan);
-    }
-
-    private Loan getActiveLoan(BookCopy copy) {
-        return loanRepository.findByCopyIdAndReturnDateIsNull(copy.getId())
-                .orElseThrow(() -> new NoActiveLoanException("No active loan"));
     }
 
     public LoanResponse returnBook(LoanRequest loanRequest) {
