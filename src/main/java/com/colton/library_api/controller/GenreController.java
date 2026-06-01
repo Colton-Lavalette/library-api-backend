@@ -61,4 +61,10 @@ public class GenreController extends BaseController{
                 "/genres/" + genre.id()
         );
     }
+
+    @DeleteMapping("/genres/{id}")
+    public ResponseEntity<Void> deleteGenre(@PathVariable Long id) {
+        genreService.deleteGenre(id);
+        return noContent();
+    }
 }

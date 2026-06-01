@@ -59,4 +59,10 @@ public class AuthorController extends BaseController {
                 "/authors/" + author.id()
         );
     }
+
+    @DeleteMapping("/authors/{id}")
+    public ResponseEntity<Void> deleteAuthor(@PathVariable Long id) {
+        authorService.deleteAuthor(id);
+        return noContent();
+    }
 }

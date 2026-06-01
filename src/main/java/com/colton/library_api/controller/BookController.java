@@ -119,4 +119,22 @@ public class BookController extends BaseController {
 
         return noContent();
     }
+
+    @DeleteMapping("/{bookId}/authors/{authorId}")
+    public ResponseEntity<Void> removeAuthor(
+            @PathVariable Long bookId,
+            @PathVariable Long authorId
+    ) {
+        bookAuthorService.removeAuthor(bookId, authorId);
+        return noContent();
+    }
+
+    @DeleteMapping("/{bookId}/genres/{genreId}")
+    public ResponseEntity<Void> removeGenre(
+            @PathVariable Long bookId,
+            @PathVariable Long genreId
+    ) {
+        bookGenreService.removeGenre(bookId, genreId);
+        return noContent();
+    }
 }
