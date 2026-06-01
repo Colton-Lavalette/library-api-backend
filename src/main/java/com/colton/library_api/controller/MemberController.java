@@ -60,4 +60,32 @@ public class MemberController extends BaseController {
                 "/members/" + member.memberCode()
         );
     }
+
+    @PatchMapping("/{memberCode}/activate")
+    public ResponseEntity<ApiResponse<MemberResponse>> activateMember(
+            @PathVariable String memberCode,
+            HttpServletRequest request
+    ) {
+        MemberResponse response = memberService.activateMember(memberCode);
+
+        return ok(
+                "Member activated successfully",
+                response,
+                request
+        );
+    }
+
+    @PatchMapping("/{memberCode}/deactivate")
+    public ResponseEntity<ApiResponse<MemberResponse>> deactivateMember(
+            @PathVariable String memberCode,
+            HttpServletRequest request
+    ) {
+        MemberResponse response = memberService.deactivateMember(memberCode);
+
+        return ok(
+                "Member deactivated successfully",
+                response,
+                request
+        );
+    }
 }
