@@ -13,9 +13,11 @@ import com.colton.library_api.repository.BookAuthorRepository;
 import com.colton.library_api.repository.BookCopyRepository;
 import com.colton.library_api.repository.BookGenreRepository;
 import com.colton.library_api.repository.BookRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -62,7 +64,7 @@ public class BookService {
     }
 
     public List<BookResponse> findAll() {
-        return bookRepository.findAll()
+        return bookRepository.findAll(Sort.by("id"))
                 .stream()
                 .map(this::mapToResponse)
                 .toList();

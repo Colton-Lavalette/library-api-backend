@@ -20,7 +20,7 @@ public class BookCopy {
     private String copyCode;
 
     @Column(nullable = false)
-    private boolean extant;
+    private boolean inCirculation;
 
     @ManyToOne(optional = false)
     private Book book;
@@ -36,7 +36,7 @@ public class BookCopy {
         }
         this.book = book;
         this.copyCode = copyCode;
-        this.extant = true;
+        this.inCirculation = true;
     }
 
     public Long getId() {
@@ -51,17 +51,17 @@ public class BookCopy {
         return book;
     }
 
-    public boolean isExtant() {
-        return extant;
+    public boolean isInCirculation() {
+        return inCirculation;
     }
 
-    public void markLost() {
-        if (!this.extant) return;
-        this.extant = false;
+    public void takeOutOfCirculation() {
+        if (!this.inCirculation) return;
+        this.inCirculation = false;
     }
 
-    public void markExtant() {
-        if (this.extant) return;
-        this.extant = true;
+    public void putInCirculation() {
+        if (this.inCirculation) return;
+        this.inCirculation = true;
     }
 }

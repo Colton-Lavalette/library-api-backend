@@ -1,7 +1,7 @@
 package com.colton.library_api.service;
 
-import com.colton.library_api.dto.bookcopy.BookCopyRequest;
 import com.colton.library_api.dto.bookcopy.BookCopyResponse;
+import com.colton.library_api.dto.bookcopy.UpdateCirculationRequest;
 import com.colton.library_api.exception.CopyHasLoanHistoryException;
 import com.colton.library_api.exception.ResourceNotFoundException;
 import com.colton.library_api.model.Book;
@@ -12,6 +12,8 @@ import com.colton.library_api.repository.LoanRepository;
 import com.colton.library_api.util.CodeGenerator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 public class BookCopyService {
@@ -32,7 +34,7 @@ public class BookCopyService {
                 copy.getId(),
                 copy.getCopyCode(),
                 copy.getBook().getId(),
-                copy.isExtant()
+                copy.isInCirculation()
         );
     }
 
@@ -55,6 +57,21 @@ public class BookCopyService {
         return mapToResponse(findByCodeEntity(copyCode));
     }
 
+    public List<BookCopyResponse> findByBookId(Long bookId, Boolean inCirculation) {
+
+        List<BookCopy> copies;
+
+        if (inCirculation == null) {
+            copies = bookCopyRepository.findByBookId(bookId);
+        } else {
+            copies = bookCopyRepository.findByBookIdAndInCirculation(bookId, inCirculation);
+        }
+
+        return copies.stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
     public void deleteCopy(Long copyId) {
         BookCopy copy = findByIdEntity(copyId);
 
@@ -66,16 +83,12 @@ public class BookCopyService {
     }
 
     @Transactional
-    public BookCopyResponse createBookCopy(BookCopyRequest request) {
+    public BookCopyResponse createBookCopy(Long bookId) {
 
-        if (request == null || request.bookId() == null) {
-            throw new IllegalArgumentException("BookId must not be null");
-        }
-
-        Book book = bookRepository.findById(request.bookId())
+        Book book = bookRepository.findById(bookId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "Book not found with id: " + request.bookId()
+                                "Book not found with id: " + bookId
                         )
                 );
 
@@ -86,6 +99,19 @@ public class BookCopyService {
         BookCopy saved = bookCopyRepository.save(copy);
 
         return mapToResponse(saved);
+    }
+
+    @Transactional
+    public BookCopyResponse updateCirculation(String copyCode, UpdateCirculationRequest updateCirculationRequest) {
+        BookCopy bookCopy = findByCodeEntity(copyCode);
+        if (updateCirculationRequest.inCirculation() != null) {
+            if (updateCirculationRequest.inCirculation()) {
+                bookCopy.putInCirculation();
+            } else {
+                bookCopy.takeOutOfCirculation();
+            }
+        }
+        return mapToResponse(bookCopy);
     }
 
     private String generateUniqueCopyCode() {

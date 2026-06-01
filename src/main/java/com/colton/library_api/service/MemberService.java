@@ -9,6 +9,7 @@ import com.colton.library_api.model.Name;
 import com.colton.library_api.repository.LoanRepository;
 import com.colton.library_api.repository.MemberRepository;
 import com.colton.library_api.util.CodeGenerator;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -37,7 +38,10 @@ public class MemberService {
     }
 
     public List<MemberResponse> findAll() {
-        return memberRepository.findAll()
+        return memberRepository.findAll(Sort.by(
+                        Sort.Order.asc("name.last"),
+                        Sort.Order.asc("name.first")
+                ))
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
@@ -48,6 +52,16 @@ public class MemberService {
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+
+    private Member findByCodeEntity(String memberCode) {
+        return memberRepository.findByMemberCode(memberCode)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Member not found with code: " + memberCode));
+    }
+
+    public MemberResponse findByCode(String memberCode) {
+        return mapToResponse(findByCodeEntity(memberCode));
     }
 
     public MemberResponse createMember(MemberRequest memberRequest) {
@@ -67,24 +81,6 @@ public class MemberService {
         memberRepository.save(member);
 
         return mapToResponse(member);
-    }
-
-    private String generateUniqueMemberCode() {
-        String memberCode;
-        do {
-            memberCode = CodeGenerator.generateMemberCode();
-        } while (memberRepository.existsByMemberCode(memberCode));
-        return memberCode;
-    }
-
-    private Member findByCodeEntity(String memberCode) {
-        return memberRepository.findByMemberCode(memberCode)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Member not found with code: " + memberCode));
-    }
-
-    public MemberResponse findByCode(String memberCode) {
-        return mapToResponse(findByCodeEntity(memberCode));
     }
 
     @Transactional
@@ -138,4 +134,11 @@ public class MemberService {
         return mapToResponse(member);
     }
 
+    private String generateUniqueMemberCode() {
+        String memberCode;
+        do {
+            memberCode = CodeGenerator.generateMemberCode();
+        } while (memberRepository.existsByMemberCode(memberCode));
+        return memberCode;
+    }
 }

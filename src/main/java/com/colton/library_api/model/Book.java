@@ -1,12 +1,6 @@
 package com.colton.library_api.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,9 +23,11 @@ public class Book {
     private Integer publishedYear;
 
     @OneToMany(mappedBy = "book")
+    @OrderBy("primaryAuthor DESC, author.id ASC")
     private final List<BookAuthor> authors = new ArrayList<>();
 
     @OneToMany(mappedBy = "book")
+    @OrderBy("primaryGenre DESC, genre.id ASC")
     private final List<BookGenre> genres = new ArrayList<>();
 
     @OneToMany(mappedBy = "book")

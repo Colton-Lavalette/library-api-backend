@@ -4,5 +4,5 @@ public record BookCopyResponse(
         Long id,
         String copyCode,
         Long bookId,
-        boolean extant
+        boolean inCirculation
 ) {}

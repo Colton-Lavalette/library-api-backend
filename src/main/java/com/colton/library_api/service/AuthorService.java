@@ -9,6 +9,7 @@ import com.colton.library_api.model.Name;
 import com.colton.library_api.repository.AuthorRepository;
 import com.colton.library_api.repository.BookAuthorRepository;
 import com.colton.library_api.specification.AuthorSpecification;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -36,7 +37,29 @@ public class AuthorService {
     }
 
     public List<AuthorResponse> findAll() {
-        return authorRepository.findAll()
+        return authorRepository.findAll(Sort.by("id"))
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    private Author findByIdEntity(Long id) {
+        return authorRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Author not found with id: " + id));
+    }
+
+    public AuthorResponse findById(Long id) {
+        return mapToResponse(findByIdEntity(id));
+    }
+
+    public List<AuthorResponse> searchAuthors(String first, String last, Integer birthYear) {
+        Specification<Author> spec = (root, query, cb) -> cb.conjunction();
+
+        if (first != null) spec = spec.and(AuthorSpecification.hasFirstName(first));
+        if (last != null) spec = spec.and(AuthorSpecification.hasLastName(last));
+        if (birthYear != null) spec = spec.and(AuthorSpecification.hasBirthYear(birthYear));
+
+        return authorRepository.findAll(spec)
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
@@ -56,28 +79,6 @@ public class AuthorService {
         Author author = new Author(name, authorRequest.birthYear());
         authorRepository.save(author);
         return mapToResponse(author);
-    }
-
-    public List<AuthorResponse> searchAuthors(String first, String last, Integer birthYear) {
-        Specification<Author> spec = (root, query, cb) -> cb.conjunction();
-
-        if (first != null) spec = spec.and(AuthorSpecification.hasFirstName(first));
-        if (last != null) spec = spec.and(AuthorSpecification.hasLastName(last));
-        if (birthYear != null) spec = spec.and(AuthorSpecification.hasBirthYear(birthYear));
-
-        return authorRepository.findAll(spec)
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
-    }
-
-    private Author findByIdEntity(Long id) {
-        return authorRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Author not found with id: " + id));
-    }
-
-    public AuthorResponse findById(Long id) {
-        return mapToResponse(findByIdEntity(id));
     }
 
     @Transactional

@@ -2,71 +2,93 @@ package com.colton.library_api.controller;
 
 import com.colton.library_api.dto.bookcopy.BookCopyRequest;
 import com.colton.library_api.dto.bookcopy.BookCopyResponse;
+import com.colton.library_api.dto.bookcopy.UpdateCirculationRequest;
 import com.colton.library_api.dto.common.ApiResponse;
-import com.colton.library_api.dto.common.ApiResponseFactory;
 import com.colton.library_api.service.BookCopyService;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/book-copies")
-public class BookCopyController {
+public class BookCopyController extends BaseController {
     private final BookCopyService bookCopyService;
 
     public BookCopyController(BookCopyService bookCopyService) {
         this.bookCopyService = bookCopyService;
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<BookCopyResponse>> getBookCopyById(@PathVariable Long id) {
+    @GetMapping("/book-copies/{id}")
+    public ResponseEntity<ApiResponse<BookCopyResponse>> getBookCopyById(
+            @PathVariable Long id,
+            HttpServletRequest httpServletRequest
+    ) {
 
         BookCopyResponse bookCopy = bookCopyService.findById(id);
 
-        return ResponseEntity.ok(
-                ApiResponseFactory.success(
-                        HttpStatus.OK,
-                        "Book copy retrieved successfully",
-                        bookCopy,
-                        "/book-copies/" + id
-                )
+        return ok(
+                "Book copy retrieved successfully",
+                bookCopy,
+                httpServletRequest
         );
     }
 
-    @GetMapping("/code/{copyCode}")
-    public ResponseEntity<ApiResponse<BookCopyResponse>> getBookCopyByCode(@PathVariable String copyCode) {
+    @GetMapping("/book-copies/code/{copyCode}")
+    public ResponseEntity<ApiResponse<BookCopyResponse>> getBookCopyByCode(
+            @PathVariable String copyCode,
+            HttpServletRequest httpServletRequest
+    ) {
 
         BookCopyResponse bookCopy = bookCopyService.findByCode(copyCode);
 
-        return ResponseEntity.ok(
-                ApiResponseFactory.success(
-                        HttpStatus.OK,
-                        "Book copy retrieved successfully",
-                        bookCopy,
-                        "/book-copies/code/" + copyCode
-                )
+        return ok(
+                "Book copy retrieved successfully",
+                bookCopy,
+                httpServletRequest
         );
     }
 
-    @PostMapping
-    public ResponseEntity<ApiResponse<BookCopyResponse>> createBookCopy(
-            @Valid @RequestBody BookCopyRequest request
+    @GetMapping("/books/{bookId}/copies")
+    public ResponseEntity<ApiResponse<List<BookCopyResponse>>> getCopiesForBook(
+            @PathVariable Long bookId,
+            @RequestParam(required = false) Boolean inCirculation,
+            HttpServletRequest httpServletRequest
     ) {
+        List<BookCopyResponse> bookCopies = bookCopyService.findByBookId(bookId, inCirculation);
 
-        BookCopyResponse bookCopy = bookCopyService.createBookCopy(request);
-
-        ApiResponse<BookCopyResponse> response =
-                ApiResponseFactory.success(
-                        HttpStatus.CREATED,
-                        "Copy created successfully",
-                        bookCopy,
-                        "/book-copies/" + bookCopy.id()
-                );
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(response);
+        return ok(
+                "Book copies retrieved successfully",
+                bookCopies,
+                httpServletRequest
+        );
     }
 
+    @PostMapping("/books/{bookId}/copies")
+    public ResponseEntity<ApiResponse<BookCopyResponse>> createBookCopy(
+            @PathVariable Long bookId
+    ) {
+        BookCopyResponse bookCopy =
+                bookCopyService.createBookCopy(bookId);
+
+        return created(
+                bookCopy,
+                "/book-copies/" + bookCopy.id()
+        );
+    }
+
+    @PatchMapping("/book-copies/{copyCode}")
+    public ResponseEntity<ApiResponse<BookCopyResponse>> updateCirculation(
+            @PathVariable String copyCode,
+            @RequestBody UpdateCirculationRequest updateCirculationRequest,
+            HttpServletRequest httpServletRequest
+    ) {
+        BookCopyResponse bookCopyResponse = bookCopyService.updateCirculation(copyCode, updateCirculationRequest);
+
+        return ok(
+                "Book copy circulation updated successfully",
+                bookCopyResponse,
+                httpServletRequest
+        );
+    }
 }

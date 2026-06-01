@@ -7,6 +7,7 @@ import com.colton.library_api.exception.ResourceNotFoundException;
 import com.colton.library_api.model.Genre;
 import com.colton.library_api.repository.BookGenreRepository;
 import com.colton.library_api.repository.GenreRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,31 @@ public class GenreService {
         );
     }
 
+    public List<GenreResponse> findAll() {
+        return genreRepository.findAll(Sort.by("id"))
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    private Genre findByIdEntity(Long id) {
+        return genreRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Genre not found with id: " + id));
+    }
+
+    public GenreResponse findById(Long id) {
+        return mapToResponse(findByIdEntity(id));
+    }
+
+    private Genre findByNameEntity(String name) {
+        return genreRepository.findByName(name)
+                .orElseThrow(() -> new ResourceNotFoundException("Genre not found: " + name));
+    }
+
+    public GenreResponse findByName(String name) {
+        return mapToResponse(findByNameEntity(name));
+    }
+
     public GenreResponse createGenre(GenreRequest genreRequest) {
 
         String name = genreRequest.name();
@@ -41,33 +67,16 @@ public class GenreService {
         return mapToResponse(genreRepository.save(genre));
     }
 
-    public GenreResponse findById(Long id) {
-        return mapToResponse(findByIdEntity(id));
-    }
-
-    private Genre findByIdEntity(Long id) {
-        return genreRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Genre not found with id: " + id));
-    }
-
-    public List<GenreResponse> findAll() {
-        return genreRepository.findAll()
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
-    }
-
-    public GenreResponse findByName(String name) {
-        return mapToResponse(genreRepository.findByName(name)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Genre not found with name: " + name)));
-    }
-
     @Transactional
     public GenreResponse updateGenreName(Long id, String name) {
-        Genre genre = genreRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Genre not found with id: " + id));
+        Genre genre = findByIdEntity(id);
+
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Name must not be null");
+        }
+
         genre.updateName(name);
+
         return mapToResponse(genre);
     }
 
