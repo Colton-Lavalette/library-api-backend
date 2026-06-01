@@ -1,6 +1,7 @@
 package com.colton.library_api.service;
 
 import com.colton.library_api.dto.bookcopy.BookCopyResponse;
+import com.colton.library_api.dto.bookcopy.UpdateCirculationRequest;
 import com.colton.library_api.exception.CopyHasLoanHistoryException;
 import com.colton.library_api.exception.ResourceNotFoundException;
 import com.colton.library_api.model.Book;
@@ -33,7 +34,7 @@ public class BookCopyService {
                 copy.getId(),
                 copy.getCopyCode(),
                 copy.getBook().getId(),
-                copy.isExtant()
+                copy.isInCirculation()
         );
     }
 
@@ -56,9 +57,17 @@ public class BookCopyService {
         return mapToResponse(findByCodeEntity(copyCode));
     }
 
-    public List<BookCopyResponse> findByBookId(Long bookId) {
-        return bookCopyRepository.findByBookId(bookId)
-                .stream()
+    public List<BookCopyResponse> findByBookId(Long bookId, Boolean inCirculation) {
+
+        List<BookCopy> copies;
+
+        if (inCirculation == null) {
+            copies = bookCopyRepository.findByBookId(bookId);
+        } else {
+            copies = bookCopyRepository.findByBookIdAndInCirculation(bookId, inCirculation);
+        }
+
+        return copies.stream()
                 .map(this::mapToResponse)
                 .toList();
     }
@@ -90,6 +99,19 @@ public class BookCopyService {
         BookCopy saved = bookCopyRepository.save(copy);
 
         return mapToResponse(saved);
+    }
+
+    @Transactional
+    public BookCopyResponse updateCirculation(String copyCode, UpdateCirculationRequest updateCirculationRequest) {
+        BookCopy bookCopy = findByCodeEntity(copyCode);
+        if (updateCirculationRequest.inCirculation() != null) {
+            if (updateCirculationRequest.inCirculation()) {
+                bookCopy.putInCirculation();
+            } else {
+                bookCopy.takeOutOfCirculation();
+            }
+        }
+        return mapToResponse(bookCopy);
     }
 
     private String generateUniqueCopyCode() {

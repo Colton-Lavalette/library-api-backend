@@ -12,4 +12,5 @@ public interface BookCopyRepository extends JpaRepository<BookCopy, Long> {
     boolean existsByCopyCode(String copyCode);
     Optional<BookCopy> findByCopyCode(String copyCode);
     List<BookCopy> findByBookId(Long bookId);
+    List<BookCopy> findByBookIdAndInCirculation(Long bookId, boolean inCirculation);
 }

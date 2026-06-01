@@ -1,6 +1,8 @@
 package com.colton.library_api.controller;
 
+import com.colton.library_api.dto.bookcopy.BookCopyRequest;
 import com.colton.library_api.dto.bookcopy.BookCopyResponse;
+import com.colton.library_api.dto.bookcopy.UpdateCirculationRequest;
 import com.colton.library_api.dto.common.ApiResponse;
 import com.colton.library_api.service.BookCopyService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,9 +52,10 @@ public class BookCopyController extends BaseController {
     @GetMapping("/books/{bookId}/copies")
     public ResponseEntity<ApiResponse<List<BookCopyResponse>>> getCopiesForBook(
             @PathVariable Long bookId,
+            @RequestParam(required = false) Boolean inCirculation,
             HttpServletRequest httpServletRequest
     ) {
-        List<BookCopyResponse> bookCopies = bookCopyService.findByBookId(bookId);
+        List<BookCopyResponse> bookCopies = bookCopyService.findByBookId(bookId, inCirculation);
 
         return ok(
                 "Book copies retrieved successfully",
@@ -71,6 +74,21 @@ public class BookCopyController extends BaseController {
         return created(
                 bookCopy,
                 "/book-copies/" + bookCopy.id()
+        );
+    }
+
+    @PatchMapping("/book-copies/{copyCode}")
+    public ResponseEntity<ApiResponse<BookCopyResponse>> updateCirculation(
+            @PathVariable String copyCode,
+            @RequestBody UpdateCirculationRequest updateCirculationRequest,
+            HttpServletRequest httpServletRequest
+    ) {
+        BookCopyResponse bookCopyResponse = bookCopyService.updateCirculation(copyCode, updateCirculationRequest);
+
+        return ok(
+                "Book copy circulation updated successfully",
+                bookCopyResponse,
+                httpServletRequest
         );
     }
 }

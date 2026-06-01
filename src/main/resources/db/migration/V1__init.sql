@@ -31,7 +31,7 @@ CREATE TABLE books (
 CREATE TABLE book_copies (
                              id BIGINT AUTO_INCREMENT PRIMARY KEY,
                              copy_code VARCHAR(255) NOT NULL UNIQUE,
-                             extant BOOLEAN NOT NULL,
+                             in_circulation BOOLEAN NOT NULL DEFAULT TRUE,
                              book_id BIGINT NOT NULL,
                              CONSTRAINT fk_book_copies_book
                                  FOREIGN KEY (book_id) REFERENCES books(id)
