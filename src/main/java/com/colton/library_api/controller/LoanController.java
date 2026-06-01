@@ -5,6 +5,7 @@ import com.colton.library_api.dto.common.ApiResponseFactory;
 import com.colton.library_api.dto.loan.LoanRequest;
 import com.colton.library_api.dto.loan.LoanResponse;
 import com.colton.library_api.dto.loan.ReturnLoanRequest;
+import com.colton.library_api.model.LoanStatus;
 import com.colton.library_api.service.LoanService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -24,9 +25,12 @@ public class LoanController extends BaseController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<LoanResponse>>> getAllLoans(HttpServletRequest httpServletRequest) {
+    public ResponseEntity<ApiResponse<List<LoanResponse>>> getAllLoans(
+            @RequestParam(required = false) LoanStatus status,
+            HttpServletRequest httpServletRequest
+    ) {
 
-        List<LoanResponse> loans = loanService.findAll();
+        List<LoanResponse> loans = loanService.findLoans(status);
 
         return ok(
                 "Loans retrieved successfully",
@@ -34,7 +38,6 @@ public class LoanController extends BaseController {
                 httpServletRequest
         );
     }
-
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<LoanResponse>> getLoan(

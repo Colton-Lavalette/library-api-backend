@@ -8,6 +8,7 @@ import com.colton.library_api.exception.NoActiveLoanException;
 import com.colton.library_api.exception.ResourceNotFoundException;
 import com.colton.library_api.model.BookCopy;
 import com.colton.library_api.model.Loan;
+import com.colton.library_api.model.LoanStatus;
 import com.colton.library_api.model.Member;
 import com.colton.library_api.repository.BookCopyRepository;
 import com.colton.library_api.repository.LoanRepository;
@@ -45,9 +46,23 @@ public class LoanService {
         );
     }
 
-    public List<LoanResponse> findAll() {
-        return loanRepository.findAll(Sort.by(Sort.Direction.DESC, "loanDate"))
-                .stream()
+    public List<LoanResponse> findLoans(LoanStatus status) {
+
+        List<Loan> loans;
+
+        if (status == null) {
+            loans = loanRepository.findAll(Sort.by(Sort.Direction.DESC, "loanDate"));
+        } else if (status == LoanStatus.ACTIVE) {
+            loans = loanRepository.findByReturnDateIsNull(
+                    Sort.by(Sort.Direction.DESC, "loanDate")
+            );
+        } else {
+            loans = loanRepository.findByReturnDateIsNotNull(
+                    Sort.by(Sort.Direction.DESC, "loanDate")
+            );
+        }
+
+        return loans.stream()
                 .map(this::mapToResponse)
                 .toList();
     }
