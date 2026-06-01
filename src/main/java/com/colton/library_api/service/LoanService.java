@@ -110,8 +110,8 @@ public class LoanService {
         return mapToResponse(loan);
     }
 
-    public LoanResponse returnBook(LoanRequest loanRequest) {
-        BookCopy copy = findCopyByCode(loanRequest.copyCode());
+    public LoanResponse returnBook(String copyCode) {
+        BookCopy copy = findCopyByCode(copyCode);
         Loan loan = getActiveLoan(copy);
         loan.returnBook(LocalDate.now());
         loanRepository.save(loan);

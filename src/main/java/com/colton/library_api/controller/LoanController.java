@@ -4,6 +4,7 @@ import com.colton.library_api.dto.common.ApiResponse;
 import com.colton.library_api.dto.common.ApiResponseFactory;
 import com.colton.library_api.dto.loan.LoanRequest;
 import com.colton.library_api.dto.loan.LoanResponse;
+import com.colton.library_api.dto.loan.ReturnLoanRequest;
 import com.colton.library_api.service.LoanService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -52,13 +53,27 @@ public class LoanController extends BaseController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<LoanResponse>> createLoan(
-            @Valid @RequestBody LoanRequest request
+            @Valid @RequestBody LoanRequest loanRequest
     ) {
-        LoanResponse loan = loanService.createLoan(request);
+        LoanResponse loan = loanService.createLoan(loanRequest);
 
         return created(
                 loan,
                 "/loans/" + loan.id()
+        );
+    }
+
+    @PostMapping("/return")
+    public ResponseEntity<ApiResponse<LoanResponse>> returnLoan(
+            @Valid @RequestBody ReturnLoanRequest returnLoanRequest,
+            HttpServletRequest httpServletRequest
+    ) {
+        LoanResponse loan = loanService.returnBook(returnLoanRequest.copyCode());
+
+        return ok(
+                "Loan returned successfully",
+                loan,
+                httpServletRequest
         );
     }
 }
