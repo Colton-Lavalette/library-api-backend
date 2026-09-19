@@ -37,7 +37,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
             EmailAlreadyInUseException.class,
             DuplicateIsbnException.class,
-            BookAlreadyLoanedException.class
+            BookAlreadyLoanedException.class,
+            ResourceInUseException.class
     })
     public ResponseEntity<ApiError> conflict(
             RuntimeException ex,
