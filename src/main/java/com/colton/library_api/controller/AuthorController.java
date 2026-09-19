@@ -22,12 +22,28 @@ public class AuthorController extends BaseController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<AuthorResponse>>> getAllAuthors(HttpServletRequest httpServletRequest) {
+    public ResponseEntity<ApiResponse<List<AuthorResponse>>> getAuthors(
+            @RequestParam(required = false) String first,
+            @RequestParam(required = false) String last,
+            @RequestParam(required = false) Integer birthYear,
+            HttpServletRequest httpServletRequest
+    ) {
+        List<AuthorResponse> authors;
 
-        List<AuthorResponse> authors = authorService.findAll();
+        if (first != null || last != null || birthYear != null) {
+            authors = authorService.searchAuthors(first, last, birthYear);
+        } else {
+            authors = authorService.findAll();
+        }
+
+        String message = switch (authors.size()) {
+            case 0 -> "No authors found";
+            case 1 -> "Author retrieved successfully";
+            default -> "Authors retrieved successfully";
+        };
 
         return ok(
-                "Authors retrieved successfully",
+                message,
                 authors,
                 httpServletRequest
         );
