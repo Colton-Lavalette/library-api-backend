@@ -1,26 +1,26 @@
 -- Authors
 INSERT INTO authors (first, middle, last, birth_year) VALUES
-                                                              ('George',  null,    'Orwell',      1903),
-                                                              ('Harper',  null,    'Lee',         1926),
-                                                              ('Frank',   null,    'Herbert',     1920),
-                                                              ('F.',      'Scott', 'Fitzgerald',  1896),
-                                                              ('Aldous',  null,    'Huxley',      1894);
+                                                          ('George',  null,    'Orwell',      1903),
+                                                          ('Harper',  null,    'Lee',         1926),
+                                                          ('Frank',   null,    'Herbert',     1920),
+                                                          ('F.',      'Scott', 'Fitzgerald',  1896),
+                                                          ('Aldous',  null,    'Huxley',      1894);
 
 -- Genres
 INSERT INTO genres (name) VALUES
-                                  ('Dystopian Fiction'),
-                                  ('Literary Fiction'),
-                                  ('Science Fiction'),
-                                  ('Mystery'),
-                                  ('Fantasy');
+                              ('Dystopian Fiction'),
+                              ('Literary Fiction'),
+                              ('Science Fiction'),
+                              ('Mystery'),
+                              ('Fantasy');
 
 -- Books
 INSERT INTO books (title, isbn, published_year) VALUES
-                                                        ('1984',                      '9780451524935', 1949),
-                                                        ('To Kill a Mockingbird',     '9780061743528', 1960),
-                                                        ('Dune',                      '9780441013593', 1965),
-                                                        ('The Great Gatsby',          '9780743273565', 1925),
-                                                        ('Brave New World',           '9780060850524', 1932);
+                                                    ('1984',                      '9780451524935', 1949),
+                                                    ('To Kill a Mockingbird',     '9780061743528', 1960),
+                                                    ('Dune',                      '9780441013593', 1965),
+                                                    ('The Great Gatsby',          '9780743273565', 1925),
+                                                    ('Brave New World',           '9780060850524', 1932);
 
 -- Book Authors
 INSERT INTO book_authors (book_id, author_id, primary_author)
