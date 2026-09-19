@@ -76,7 +76,22 @@ public class AuthorController extends BaseController {
         );
     }
 
-    @DeleteMapping("/authors/{id}")
+    @PatchMapping("/{id}")
+    public ResponseEntity<ApiResponse<AuthorResponse>> updateAuthor(
+            @PathVariable Long id,
+            @Valid @RequestBody AuthorRequest authorRequest,
+            HttpServletRequest httpServletRequest
+    ) {
+        AuthorResponse author = authorService.updateAuthor(id, authorRequest);
+
+        return ok(
+                "Author updated successfully",
+                author,
+                httpServletRequest
+        );
+    }
+
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAuthor(@PathVariable Long id) {
         authorService.deleteAuthor(id);
         return noContent();
