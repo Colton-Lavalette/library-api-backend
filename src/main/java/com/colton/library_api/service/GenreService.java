@@ -86,7 +86,7 @@ public class GenreService {
         boolean inUse = bookGenreRepository.existsByGenreId(id);
 
         if (inUse) {
-            throw new ResourceInUseException("Genre is linked to one or books and cannot be deleted");
+            throw new ResourceInUseException("Genre is linked to one or more books and cannot be deleted");
         }
 
         genreRepository.delete(genre);
